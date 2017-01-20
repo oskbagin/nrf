@@ -6,11 +6,6 @@
 #include "ble_srv_common.h"
 #include "app_error.h"
 
-void ble_our_service_on_ble_evt(ble_os_t * p_our_service, ble_evt_t * p_ble_evt)
-{
-    // OUR_JOB: Step 3.D Implement switch case handling BLE events related to our service. 
-}
-
 /**@brief Function for adding our new characterstic to "Our service" that we initiated in the previous tutorial. 
  *
  * @param[in]   p_our_service        Our Service structure.
@@ -22,17 +17,16 @@ static uint32_t our_char_add(ble_os_t * p_our_service)
 		ble_uuid128_t       base_uuid = BLE_UUID_OUR_BASE_UUID;
 		ble_uuid_t          char_uuid[NUM_OF_CHAR];
 		
-		ble_gatts_char_md_t char_md[NUM_OF_CHAR];
-		memset(&char_md, 0, sizeof(char_md));
+		ble_gatts_char_md_t char_md[NUM_OF_CHAR];							 /// characteristic metadata
+		ble_gatts_attr_t    attr_char_value[NUM_OF_CHAR];				// characteristic value atrribute
+		ble_gatts_attr_md_t attr_md[NUM_OF_CHAR];								//attribute metadata
 		
-		ble_gatts_attr_md_t cccd_md[NUM_OF_CHAR];
-		memset(&cccd_md, 0, sizeof(cccd_md));
 	
-		ble_gatts_attr_md_t attr_md[NUM_OF_CHAR];
 		memset(&attr_md, 0, sizeof(attr_md));
-	
-		ble_gatts_attr_t    attr_char_value[NUM_OF_CHAR];
+		memset(&char_md, 0, sizeof(char_md));
 		memset(&attr_char_value, 0, sizeof(attr_char_value));
+		
+		
 	
 	for(int i=0;i<NUM_OF_CHAR;i++){
 		char_uuid[i].uuid      = BLE_UUID_OUR_CHARACTERISTC_UUID;
@@ -105,8 +99,7 @@ static uint32_t our_char_add(ble_os_t * p_our_service)
 	
 	attr_char_value[8].max_len     = 10;
 	attr_char_value[8].init_len    = 10;
-	uint8_t value8[10]            = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-	attr_char_value[8].p_value     = value8;
+	memset(&attr_char_value[8].p_value,0,sizeof(attr_char_value[8].p_value));
 	
 	attr_char_value[9].max_len     = 10;
 	attr_char_value[9].init_len    = 10;

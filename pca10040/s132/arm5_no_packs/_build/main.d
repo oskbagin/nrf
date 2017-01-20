@@ -62,3 +62,5 @@
 .\_build\main.o: ..\..\..\..\..\..\components\libraries\button\app_button.h
 .\_build\main.o: ..\..\..\..\..\bsp\bsp_btn_ble.h
 .\_build\main.o: ..\..\..\our_service.h
+.\_build\main.o: ..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT.h
+.\_build\main.o: ..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT_Conf.h

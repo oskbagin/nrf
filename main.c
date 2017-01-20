@@ -19,6 +19,7 @@
 #include "bsp.h"
 #include "bsp_btn_ble.h"
 #include "our_service.h"
+#include "SEGGER_RTT.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                          /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -73,8 +74,6 @@ static uint8_t m_beacon_info[APP_BEACON_INFO_LENGTH] =                    /**< I
 };
 
 ble_os_t m_our_service;
-
-// OUR_JOB: Step 3.G, Declare an app_timer id variable and define our timer interval and define a timer interval
                                    
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -92,24 +91,13 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-
-//static void timer_timeout_handler(void * p_context)
-//{
-//    // OUR_JOB: Step 3.F, Update temperature and characteristic value.
-//}
-
-
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module. This creates and starts application timers.
  */
 static void timers_init(void)
 {
-
-    // Initialize timer module.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
-
-    // OUR_JOB: Step 3.H, Initiate our timer
 }
 
 
@@ -209,7 +197,7 @@ static void conn_params_init(void)
 */
 static void application_timers_start(void)
 {
-    // OUR_JOB: Step 3.I, Start our timer
+    
 }
 
 
@@ -277,7 +265,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 						isLogin=false;
             break;
-
+				case BLE_GATTS_EVT_WRITE:
+					SEGGER_RTT_WriteString(0,"Pisanie do charakterystyki\n");
+				break;
         default:
             // No implementation needed.
             break;
@@ -299,7 +289,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     bsp_btn_ble_on_ble_evt(p_ble_evt);
     on_ble_evt(p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
-    // OUR_JOB: Step 3.C, Call ble_our_service_on_ble_evt() to do housekeeping of ble connections related to our service and characteristic
 }
 
 
@@ -448,11 +437,11 @@ static void device_manager_init(bool erase_bonds)
  */
 static void advertising_init(void)
 {
-    uint32_t      err_code;
+		uint32_t      err_code;
     ble_advdata_t advdata;
-
-    memset(&advdata, 0, sizeof(advdata));
 		
+    memset(&advdata, 0, sizeof(advdata));
+		//advdata.name_type=BLE_ADVDATA_FULL_NAME;
     advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE|BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
 
     ble_adv_modes_config_t options = {0};
@@ -465,15 +454,6 @@ static void advertising_init(void)
     manuf_specific_data.company_identifier = APP_COMPANY_IDENTIFIER;
 
 #if defined(USE_UICR_FOR_MAJ_MIN_VALUES)
-    // If USE_UICR_FOR_MAJ_MIN_VALUES is defined, the major and minor values will be read from the
-    // UICR instead of using the default values. The major and minor values obtained from the UICR
-    // are encoded into advertising data in big endian order (MSB First).
-    // To set the UICR used by this example to a desired value, write to the address 0x10001080
-    // using the nrfjprog tool. The command to be used is as follows.
-    // nrfjprog --snr <Segger-chip-Serial-Number> --memwr 0x10001080 --val <your major/minor value>
-    // For example, for a major value and minor value of 0xabcd and 0x0102 respectively, the
-    // the following command should be used.
-    // nrfjprog --snr <Segger-chip-Serial-Number> --memwr 0x10001080 --val 0xabcd0102
     uint16_t major_value = ((*(uint32_t *)UICR_ADDRESS) & 0xFFFF0000) >> 16;
     uint16_t minor_value = ((*(uint32_t *)UICR_ADDRESS) & 0x0000FFFF);
 
@@ -489,9 +469,21 @@ static void advertising_init(void)
     manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
     manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
     advdata.p_manuf_specific_data = &manuf_specific_data;
-		//advdata.name_type               = BLE_ADVDATA_SHORT_NAME;
 		
-    err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
+		ble_advdata_manuf_data_t                manuf_data_response;
+		uint8_t                                 data_response[] = DEVICE_NAME;
+		manuf_data_response.data.p_data              = data_response;        
+    manuf_data_response.data.size                = sizeof(data_response);
+		
+		ble_advdata_t   advdata_response;// Declare and populate a scan response packet
+		
+    // Always initialize all fields in structs to zero or you might get unexpected behaviour
+    memset(&advdata_response, 0, sizeof(advdata_response));
+    // Populate the scan response packet
+    advdata_response.name_type               = BLE_ADVDATA_FULL_NAME; 
+    advdata_response.p_manuf_specific_data   = &manuf_data_response;
+		
+    err_code = ble_advertising_init(&advdata, &advdata_response, &options, on_adv_evt, NULL);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -546,7 +538,7 @@ int main(void)
     application_timers_start();
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
-
+		SEGGER_RTT_WriteString(0, "Main");
     // Enter main loop.
     for (;;)
     {
