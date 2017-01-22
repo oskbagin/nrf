@@ -252,21 +252,31 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
     uint32_t err_code;
-
+		char ch16[2];
+		//p_ble_evt->evt.gatts_evt.params.write.uuid;
+		memset( ch16,0, sizeof(ch16));
+		sprintf(ch16, "%d", p_ble_evt->evt.gatts_evt.params.write.uuid.uuid);
     switch (p_ble_evt->header.evt_id)
             {
         case BLE_GAP_EVT_CONNECTED:
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+						SEGGER_RTT_WriteString(0,"\nPolaczenie ustawione\n");
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 						isLogin=false;
+						SEGGER_RTT_WriteString(0,"\nlogout\n");
             break;
 				case BLE_GATTS_EVT_WRITE:
-					SEGGER_RTT_WriteString(0,"Pisanie do charakterystyki\n");
+					
+					SEGGER_RTT_WriteString(0,"\nPisanie do charakterystyki\n");
+					SEGGER_RTT_WriteString(0,"\n");
+					SEGGER_RTT_WriteString(0,ch16);
+					SEGGER_RTT_WriteString(0,"\n");
+				  
 				break;
         default:
             // No implementation needed.
@@ -471,16 +481,17 @@ static void advertising_init(void)
     advdata.p_manuf_specific_data = &manuf_specific_data;
 		
 		ble_advdata_manuf_data_t                manuf_data_response;
+		manuf_data_response.company_identifier      = APP_COMPANY_IDENTIFIER;
 		uint8_t                                 data_response[] = DEVICE_NAME;
-		manuf_data_response.data.p_data              = data_response;        
+		manuf_data_response.data.p_data              = data_response;   
     manuf_data_response.data.size                = sizeof(data_response);
 		
 		ble_advdata_t   advdata_response;// Declare and populate a scan response packet
 		
-    // Always initialize all fields in structs to zero or you might get unexpected behaviour
     memset(&advdata_response, 0, sizeof(advdata_response));
     // Populate the scan response packet
     advdata_response.name_type               = BLE_ADVDATA_FULL_NAME; 
+		
     advdata_response.p_manuf_specific_data   = &manuf_data_response;
 		
     err_code = ble_advertising_init(&advdata, &advdata_response, &options, on_adv_evt, NULL);

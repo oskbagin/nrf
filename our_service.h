@@ -6,6 +6,7 @@
 #include "ble.h"
 #include "ble_srv_common.h"
 
+#define jeden 1
 #define APP_BEACON_INFO_LENGTH          0x17                              /**< Total length of information advertised by the Beacon. */
 #define APP_ADV_DATA_LENGTH             0x15                              /**< Length of manufacturer specific data in the advertisement. */
 #define APP_DEVICE_TYPE                 0x02                              /**< 0x02 refers to Beacon. */
@@ -18,7 +19,7 @@
                                         0x80, 0x24, 0xBC, 0x5B, \
                                         0x71, 0xE0, 0x89, 0x3E            /**< Proprietary UUID for Beacon. */
 #define APP_BEACON_FLAGS								0x06
-
+#define BEACON_PASSWORD									00000000000
 #define BLE_UUID_OUR_BASE_UUID              {{0x6a,0x4a, 0x22,0x05,0x77,0x08,0x79,0xa1,0x39,0x43,0xdd,0x48,0xe0,0x43,0xd3,0x12}}
 #define BLE_UUID_OUR_SERVICE_UUID                0x43e0
 
