@@ -14,7 +14,7 @@
 static uint32_t our_char_add(ble_os_t * p_our_service)
 {
 	
-	if(jeden==1){
+	if(jeden==0){
     uint32_t   err_code = 0; // Variable to hold return codes from library and softdevice functions
     
     // OUR_JOB: Step 2.A, Add a custom characteristic UUID
@@ -165,13 +165,14 @@ static uint32_t our_char_add(ble_os_t * p_our_service)
 	uint8_t value7[1]            = {0xB3};
 	attr_char_value[7].p_value     = value7;
 	// password
-	attr_char_value[8].max_len     = 10;
-	attr_char_value[8].init_len    = 10;
-	memset(&attr_char_value[8].p_value,0,sizeof(attr_char_value[8].p_value));
+	attr_char_value[8].max_len     = BEACON_PASSWORD_LNG;
+	attr_char_value[8].init_len    = BEACON_PASSWORD_LNG;
+	uint8_t value8[BEACON_PASSWORD_LNG]            	 = {BEACON_PASSWORD};
+	attr_char_value[8].p_value     = value8;
 	// change password
-	attr_char_value[9].max_len     = 10;
-	attr_char_value[9].init_len    = 10;
-	uint8_t value9[1]            = {0X00};
+	attr_char_value[9].max_len     = BEACON_PASSWORD_LNG;
+	attr_char_value[9].init_len    = BEACON_PASSWORD_LNG;
+	uint8_t value9[BEACON_PASSWORD_LNG] = {BEACON_PASSWORD};
 	attr_char_value[9].p_value     = value9;
 	// is login
 	attr_char_value[10].max_len     = 1;
@@ -222,8 +223,24 @@ void our_service_init(ble_os_t * p_our_service)
     our_char_add(p_our_service);
 }
 
-void our_termperature_characteristic_update(ble_os_t *p_our_service, int32_t *temperature_value)
+void isLogin_update_value(ble_os_t *p_our_service, bool* isLogin)
 {
-    // OUR_JOB: Step 3.E, Update characteristic value
+		char pop[8];
+		sprintf(pop, "%d", p_our_service->conn_handle);
+		SEGGER_RTT_WriteString(0, pop);
+	if(p_our_service->conn_handle != BLE_CONN_HANDLE_INVALID){
+		SEGGER_RTT_WriteString(0, "\nisLoginupdateIf\n");
+    uint16_t               len = 1;
+		ble_gatts_hvx_params_t hvx_params;
+		memset(&hvx_params, 0, sizeof(hvx_params));
 
+		hvx_params.handle = p_our_service->char_handles.value_handle;
+		
+		hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
+		hvx_params.offset = 0;
+		hvx_params.p_len  = &len;
+		hvx_params.p_data = (uint8_t*)isLogin;  
+
+		sd_ble_gatts_hvx(p_our_service->conn_handle, &hvx_params);
+	}
 }

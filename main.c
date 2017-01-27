@@ -19,7 +19,6 @@
 #include "bsp.h"
 #include "bsp_btn_ble.h"
 #include "our_service.h"
-#include "SEGGER_RTT.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT  1                                          /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -60,6 +59,9 @@ static dm_application_instance_t        m_app_handle;                           
 
 static uint16_t                          m_conn_handle = BLE_CONN_HANDLE_INVALID;   /**< Handle of the current connection. */
 static bool isLogin=false;
+
+static ble_advdata_t advdata;
+
 static uint8_t m_beacon_info[APP_BEACON_INFO_LENGTH] =                    /**< Information advertised by the Beacon. */
 {
     APP_DEVICE_TYPE,     // Manufacturer specific information. Specifies the device type in this 
@@ -244,6 +246,93 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     }
 }
 
+static void my_ble_evt_handle(ble_evt_t * p_ble_evt)
+{
+	char pop[8];
+		sprintf(pop, "%d\n", m_conn_handle);
+		SEGGER_RTT_WriteString(0, pop);
+	switch (p_ble_evt->evt.gatts_evt.params.write.uuid.uuid)
+	{
+		case 0x43e1: // uuid
+		{
+			SEGGER_RTT_WriteString(0, "\nset uuid\n");
+			uint8_t dane[4];
+			
+			memcpy(&dane, p_ble_evt->evt.gatts_evt.params.write.data, p_ble_evt->evt.gatts_evt.params.write.len);
+		
+			char ch16[4];
+			memset( ch16,0, sizeof(ch16));
+		  sprintf(ch16, "%d %d %d %d", dane[0], dane[1], dane[2], dane[3]);
+				
+			SEGGER_RTT_WriteString(0,ch16);
+			
+		}
+		break;
+		
+		case 0x43e2: // Minor
+		{
+		}
+		break;
+		case 0x43e3: // Major
+		{
+		}
+		break;
+		case 0x43e4:	//TxPower
+		{
+		}
+		break;
+		case 0x43e6:  // advparam
+		{
+		}
+		break;
+		case 0x43e7: // beacon name
+		{
+		}
+		break;
+		case 0x43e8:  // device power
+		{
+		}
+		break;
+		case 0x43e9: // password
+		{
+			uint8_t passwrd[BEACON_PASSWORD_LNG];
+			uint8_t poprawne[BEACON_PASSWORD_LNG]={BEACON_PASSWORD};
+			memcpy(&passwrd, p_ble_evt->evt.gatts_evt.params.write.data, p_ble_evt->evt.gatts_evt.params.write.len);
+			
+			uint8_t i=0;
+			bool hasloOk=true;
+			for(i=0; i<BEACON_PASSWORD_LNG; i++){
+					if(passwrd[i]!=poprawne[i]){
+						hasloOk=false;
+						break;
+					}
+			}
+			
+			if(hasloOk){
+				isLogin=true;
+				isLogin_update_value(&m_our_service, &isLogin);
+				}
+			
+			char inf[1];
+			if(isLogin) sprintf(inf, "\naccess granted");
+			else				sprintf(inf, "\naccess denied");
+			SEGGER_RTT_WriteString(0,inf);
+			char pop[16];
+		sprintf(pop, "Po %d\n", m_conn_handle);
+		SEGGER_RTT_WriteString(0, pop);
+		}
+		break;
+		case 0x43f0: // change password
+		{
+			uint8_t passwrd[BEACON_PASSWORD_LNG];
+		}
+		break;
+		default:
+			// no implementtaion needed
+			break;
+	}
+}
+
 
 /**@brief Function for handling the Application's BLE Stack events.
  *
@@ -253,29 +342,27 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
     uint32_t err_code;
 		char ch16[2];
-		//p_ble_evt->evt.gatts_evt.params.write.uuid;
-		memset( ch16,0, sizeof(ch16));
-		sprintf(ch16, "%d", p_ble_evt->evt.gatts_evt.params.write.uuid.uuid);
+		
     switch (p_ble_evt->header.evt_id)
             {
         case BLE_GAP_EVT_CONNECTED:
+				{
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 						SEGGER_RTT_WriteString(0,"\nPolaczenie ustawione\n");
             break;
-
+			}
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 						isLogin=false;
-						SEGGER_RTT_WriteString(0,"\nlogout\n");
+				 		SEGGER_RTT_WriteString(0,"\nlogout\n");
             break;
 				case BLE_GATTS_EVT_WRITE:
-					
-					SEGGER_RTT_WriteString(0,"\nPisanie do charakterystyki\n");
-					SEGGER_RTT_WriteString(0,"\n");
+					SEGGER_RTT_WriteString(0,"\nPisanie do charakterystyki \n");
+					sprintf(ch16, "%X\n", p_ble_evt->evt.gatts_evt.params.write.uuid.uuid);
 					SEGGER_RTT_WriteString(0,ch16);
-					SEGGER_RTT_WriteString(0,"\n");
+					my_ble_evt_handle(p_ble_evt);
 				  
 				break;
         default:
@@ -448,10 +535,9 @@ static void device_manager_init(bool erase_bonds)
 static void advertising_init(void)
 {
 		uint32_t      err_code;
-    ble_advdata_t advdata;
+    //ble_advdata_t advdata;
 		
     memset(&advdata, 0, sizeof(advdata));
-		//advdata.name_type=BLE_ADVDATA_FULL_NAME;
     advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE|BLE_GAP_ADV_FLAG_BR_EDR_NOT_SUPPORTED;
 
     ble_adv_modes_config_t options = {0};
@@ -475,14 +561,14 @@ static void advertising_init(void)
     m_beacon_info[index++] = MSB_16(minor_value);
     m_beacon_info[index++] = LSB_16(minor_value);
 #endif
-
+		
     manuf_specific_data.data.p_data = (uint8_t *) m_beacon_info;
     manuf_specific_data.data.size   = APP_BEACON_INFO_LENGTH;
     advdata.p_manuf_specific_data = &manuf_specific_data;
 		
-		ble_advdata_manuf_data_t                manuf_data_response;
-		manuf_data_response.company_identifier      = APP_COMPANY_IDENTIFIER;
-		uint8_t                                 data_response[] = DEVICE_NAME;
+		ble_advdata_manuf_data_t                       manuf_data_response;
+		manuf_data_response.company_identifier       = APP_COMPANY_IDENTIFIER;
+		uint8_t                                        data_response[] = DEVICE_NAME;
 		manuf_data_response.data.p_data              = data_response;   
     manuf_data_response.data.size                = sizeof(data_response);
 		

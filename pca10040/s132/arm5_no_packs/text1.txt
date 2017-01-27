@@ -1,0 +1,30 @@
+case 0x43e9: // password
+		{
+			uint8_t passwrd[BEACON_PASSWORD_LNG];
+			uint8_t poprawne[BEACON_PASSWORD_LNG]={BEACON_PASSWORD};
+			memcpy(&passwrd, p_ble_evt->evt.gatts_evt.params.write.data, p_ble_evt->evt.gatts_evt.params.write.len);
+			
+			uint8_t i=0;
+			bool hasloOk=true;
+			for(i=0; i<BEACON_PASSWORD_LNG; i++){
+					if(passwrd[i]!=poprawne[i]){
+						hasloOk=false;
+						break;
+					}
+			}
+			
+			if(hasloOk){
+				isLogin=true;
+			}
+			
+			char inf[1];
+			if(isLogin) sprintf(inf, "\naccess granted");
+			else				sprintf(inf, "\naccess denied");
+			SEGGER_RTT_WriteString(1,inf);
+			break;
+		}
+		case 0x43f0: // password
+		{
+			uint8_t passwrd[BEACON_PASSWORD_LNG];
+			break;
+		}

@@ -29,6 +29,8 @@
 .\_build\our_service.o: ..\..\..\..\..\..\components\softdevice\s132\headers\ble_gatts.h
 .\_build\our_service.o: ..\..\..\..\..\..\components\ble\common\ble_srv_common.h
 .\_build\our_service.o: ..\..\..\..\..\..\components\libraries\util\app_util.h
+.\_build\our_service.o: ..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT.h
+.\_build\our_service.o: ..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT_Conf.h
 .\_build\our_service.o: ..\..\..\..\..\..\components\libraries\util\app_error.h
 .\_build\our_service.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\_build\our_service.o: ..\..\..\..\..\..\components\libraries\util\sdk_errors.h

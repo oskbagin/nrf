@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+#include "SEGGER_RTT.h"
 
 #define jeden 1
 #define APP_BEACON_INFO_LENGTH          0x17                              /**< Total length of information advertised by the Beacon. */
@@ -18,8 +19,10 @@
                                         0x4F, 0xA2, 0x4E, 0x98, \
                                         0x80, 0x24, 0xBC, 0x5B, \
                                         0x71, 0xE0, 0x89, 0x3E            /**< Proprietary UUID for Beacon. */
+#define APP_BEACON_UUID_LENGTH					16																				
 #define APP_BEACON_FLAGS								0x06
-#define BEACON_PASSWORD									00000000000
+#define BEACON_PASSWORD									0x00, 0x00, 0x00, 0x00, 0x00
+#define BEACON_PASSWORD_LNG							5
 #define BLE_UUID_OUR_BASE_UUID              {{0x6a,0x4a, 0x22,0x05,0x77,0x08,0x79,0xa1,0x39,0x43,0xdd,0x48,0xe0,0x43,0xd3,0x12}}
 #define BLE_UUID_OUR_SERVICE_UUID                0x43e0
 
@@ -50,6 +53,5 @@ void our_service_init(ble_os_t * p_our_service);
  * @param[in]   p_our_service                     Our Service structure.
  * @param[in]   characteristic_value     New characteristic value.
  */
-void our_termperature_characteristic_update(ble_os_t *p_our_service, int32_t *temperature_value);
-
+void isLogin_update_value(ble_os_t *p_our_service, bool *isLogin);
 #endif  /* _ OUR_SERVICE_H__ */
